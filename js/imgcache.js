@@ -332,6 +332,9 @@ var ImgCache = {
             ImgCache.overridables.log('No source given to getCachedFileName', LOG_LEVEL_WARNING);
             return;
         }
+        //remove query string of image url. Reason: We provide access_token in
+        //query string of image url, but we don't want to cache image again for every token.
+        img_src = img_src.split('?')[0];
         var hash = ImgCache.overridables.hash(img_src);
         var ext = Helpers.FileGetExtension(Helpers.URIGetFileName(img_src));
         return hash + (ext ? ('.' + ext) : '');
@@ -700,7 +703,8 @@ var ImgCache = {
             if (!entry) {
                 if (error_callback) { error_callback(img_src); }
             } else {
-                success_callback(img_src, Helpers.EntryGetURL(entry));
+                //we encapsulate this function in a promise -> only one return value allowed
+                success_callback(Helpers.EntryGetURL(entry));
             }
         };
 
@@ -713,7 +717,8 @@ var ImgCache = {
     // Answer to the question comes in response_callback as the second argument (first being the path)
     ImgCache.isCached = function (img_src, response_callback) {
         ImgCache.getCachedFile(img_src, function (src, file_entry) {
-            response_callback(src, file_entry !== null);
+            //we encapsulate this function in a promise -> only one return value allowed
+            response_callback(file_entry !== null);
         });
     };
 
